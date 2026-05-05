@@ -1,22 +1,22 @@
 # knowleage_graph_build
 
-从 **Markdown** 文档构建 **LlamaIndex PropertyGraph**，写入 **Neo4j**（属性图），支持多种路径抽取器、本地 JSON 快照、配置文件与后处理（实体对齐、标签规范化）。
+Build a **LlamaIndex PropertyGraph** from **Markdown** and persist it to **Neo4j**. Supports multiple path extractors, local JSON snapshots, JSON configuration, and post-processing (entity alignment and label normalization).
 
-## 功能概览
+## Features
 
-- **抽取**：`simple` / `dynamic` / `schema`（JSON 本体约束）/ `implicit`（chunk 邻接）/ `simple_implicit`
-- **持久化**：直连 Neo4j，或 `--local-only --save-kg` 导出快照后再 `--load-kg` 导入
-- **配置**：`config/build_neo4j_kg.json`（可从 [`config/build_neo4j_kg.example.json`](config/build_neo4j_kg.example.json) 复制）；命令行参数优先于配置文件
-- **后处理**：APOC 实体对齐（精确 + 可选模糊，`rapidfuzz`）、三标签规范化；亦可单独运行 `python -m neo4j_kg.normalize_cli`
-- **补充**：[`test/ontology_ttl_to_neo4j_example.py`](test/ontology_ttl_to_neo4j_example.py) 将 Turtle 本体导入 Neo4j（与 LlamaIndex 文档图独立）
+- **Extractors**: `simple`, `dynamic`, `schema` (JSON ontology constraints), `implicit` (chunk adjacency only), `simple_implicit`
+- **Persistence**: Connect directly to Neo4j, or use `--local-only --save-kg` to export a snapshot and later `--load-kg` to import
+- **Configuration**: `config/build_neo4j_kg.json` (copy from [`config/build_neo4j_kg.example.json`](config/build_neo4j_kg.example.json)); CLI flags override file values
+- **Post-processing**: APOC-based entity alignment (exact + optional fuzzy matching via `rapidfuzz`) and three-label normalization; or run `python -m neo4j_kg.normalize_cli` alone
+- **Extra**: [`test/ontology_ttl_to_neo4j_example.py`](test/ontology_ttl_to_neo4j_example.py) imports a Turtle ontology into Neo4j (independent of the LlamaIndex document graph)
 
-## 环境要求
+## Requirements
 
-- **Python 3.10+**（推荐 **3.12**，与当前 LlamaIndex 类型注解兼容）
-- **Neo4j 5+**（图存储与部分 Cypher；实体对齐等步骤需要 **APOC**）
-- **OpenAI API**（抽取与嵌入，`gpt-4o-mini` / `text-embedding-3-small` 等可在配置中修改）
+- **Python 3.10+** ( **3.12** recommended for current LlamaIndex typing)
+- **Neo4j 5+** (APOC required for alignment / some Cypher steps)
+- **OpenAI API** (extraction and embeddings; model names configurable, e.g. `gpt-4o-mini`, `text-embedding-3-small`)
 
-## 安装
+## Install
 
 ```bash
 cd knowleage_graph_build
@@ -25,40 +25,40 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-若本机 `conda` 中有专用环境 `llm`，且项目 `.venv` 会抢占 `PATH`，可用：
+If you use a conda env named `llm` but a project `.venv` shadows `PATH`, prefer:
 
 ```bash
 ./scripts/llm_env_python.sh build_neo4j_kg.py --help
 ```
 
-## 环境变量
+## Environment variables
 
-在仓库根目录创建 **`.env`**（**勿提交到 Git**），例如：
+Create **`.env`** at the repo root (**do not commit**):
 
 ```env
 OPENAI_API_KEY=sk-...
 NEO4J_URI=bolt://127.0.0.1:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=...
-# 可选：Neo4j 5 逻辑库名，默认 neo4j
+# Optional Neo4j 5 logical database (default: neo4j)
 # NEO4J_DATABASE=neo4j
 ```
 
-仅做 **本地快照**（`--local-only`）且不导入 Neo4j 时，可以不配置 `NEO4J_*`。
+For **`--local-only`** snapshot workflows without Neo4j import, `NEO4J_*` may be omitted.
 
-## 快速用法
+## Quick start
 
 ```bash
-# 默认读配置 / 内置默认；处理 regulation 目录下文档（见 --markdown-root）
+# Uses merged config / built-in defaults; processes Markdown under default --markdown-root
 python build_neo4j_kg.py --all-docs
 
-# 仅导出 JSON，不连 Neo4j（适合重复实验）
+# Export JSON only (no Neo4j during extraction)
 python build_neo4j_kg.py --local-only --save-kg data/graph_snapshots/run1.json --all-docs
 
-# 从快照写入 Neo4j 并后处理
+# Load snapshot into Neo4j and run post-processing
 python build_neo4j_kg.py --load-kg data/graph_snapshots/run1.json --clean
 
-# 指定 Markdown 根目录与单文件、schema 抽取器
+# Custom Markdown root, single file, schema extractor
 python build_neo4j_kg.py \
   --markdown-root path/to/md_dir \
   --file doc.md \
@@ -67,54 +67,54 @@ python build_neo4j_kg.py \
   --schema-relaxed
 ```
 
-完整参数说明：
+Full CLI reference:
 
 ```bash
 python build_neo4j_kg.py --help
 ```
 
-## 配置文件
+## Configuration
 
-1. 复制示例：`cp config/build_neo4j_kg.example.json config/build_neo4j_kg.json`
-2. 编辑 `config/build_neo4j_kg.json`（该路径已在 `.gitignore` 中）
-3. 若该文件存在，启动时会自动合并；也可用 `--config /其它路径.json` 指定
+1. Copy the example: `cp config/build_neo4j_kg.example.json config/build_neo4j_kg.json`
+2. Edit `config/build_neo4j_kg.json` (this path is gitignored)
+3. If that file exists at repo startup it is merged automatically; use `--config path/to/other.json` to point elsewhere
 
-Schema 抽取使用的本体示例：[`neo4j_kg/schema_kg_config.example.json`](neo4j_kg/schema_kg_config.example.json)
+Schema extractor vocabulary example: [`neo4j_kg/schema_kg_config.example.json`](neo4j_kg/schema_kg_config.example.json)
 
-## 测试脚本
+## Test scripts
 
-在配置好 `OPENAI_API_KEY` 与 conda `llm`（或等价 Python）后：
+With `OPENAI_API_KEY` set and conda `llm` (or an equivalent Python) available:
 
 ```bash
-# 遍历全部 kg-extractor（simple / dynamic / schema / implicit / simple_implicit）
+# All kg-extractor modes: simple, dynamic, schema, implicit, simple_implicit
 ./scripts/test_all_extractors.sh
 
-# 配置覆盖 + 实体相关选项烟测，并可选调用上面的抽取矩阵
+# Config override smoke test + optional full extractor matrix
 ./scripts/test_rag_intro_features.sh
 
-# 仅跑 implicit、节省调用
+# Implicit extractor only (fewer LLM calls)
 SKIP_LLM_EXTRACTORS=1 ./scripts/test_all_extractors.sh
 ```
 
-脚本默认期望演示 Markdown 位于 `data/kg_snapshots/rag_intro_test.md`。当前 `.gitignore` 忽略了整个 `data/` 目录，克隆仓库后需自备语料或调整忽略规则。
+Scripts expect demo Markdown at `data/kg_snapshots/rag_intro_test.md`. The whole `data/` tree is gitignored; clone the repo and add your own corpus or adjust `.gitignore` if you want samples tracked.
 
-## 其它脚本
+## Other scripts
 
-| 路径 | 说明 |
-|------|------|
-| `_normalize_three_labels.py` | 等价于 `python -m neo4j_kg.normalize_cli` |
-| `install_neo4j_apoc.sh` / `start_neo4j_graphrag.sh` | 本地 Neo4j / APOC 辅助（按你环境选用） |
+| Path | Purpose |
+|------|---------|
+| `_normalize_three_labels.py` | Same as `python -m neo4j_kg.normalize_cli` |
+| `install_neo4j_apoc.sh`, `start_neo4j_graphrag.sh` | Optional local Neo4j / APOC helpers |
 
-## 仓库结构（简要）
+## Repository layout
 
 ```
-build_neo4j_kg.py          # CLI 入口
-neo4j_kg/                  # 包：CLI、建索引、Neo4j、快照、后处理
-config/                    # 构建 JSON 配置示例
-scripts/                   # llm 环境封装与测试脚本
+build_neo4j_kg.py          # CLI entry
+neo4j_kg/                  # Package: CLI, indexing, Neo4j, snapshots, post-process
+config/                    # Build JSON example + local overrides
+scripts/                   # llm Python wrapper and test scripts
 test/ontology_ttl_to_neo4j_example.py
 ```
 
-## 许可证
+## License
 
-未随仓库声明默认许可证；如需开源请自行添加 `LICENSE` 文件。
+No default license is bundled; add a `LICENSE` file if you publish this project openly.
