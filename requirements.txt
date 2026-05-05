@@ -1,0 +1,11 @@
+# Knowledge graph build (LlamaIndex PropertyGraph → Neo4j)
+# Requires Python 3.10+ (llama-index core uses modern typing; 3.11+ recommended).
+llama-index>=0.10.0
+llama-index-graph-stores-neo4j>=0.1.0
+llama-index-llms-openai>=0.1.0
+llama-index-embeddings-openai>=0.1.0
+python-dotenv>=1.0.0
+rapidfuzz>=3.0.0
+# TTL ontology → Neo4j (test/ontology_ttl_to_neo4j_example.py)
+rdflib>=7.0.0
+neo4j>=5.0.0

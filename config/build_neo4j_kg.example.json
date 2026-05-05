@@ -1,0 +1,18 @@
+{
+    "chunk_size": 512,
+    "chunk_overlap": 50,
+    "max_paths_per_chunk": 15,
+    "num_workers": 2,
+    "markdown_root": "data/regulation",
+    "kg_extractor": "simple",
+    "schema_config": null,
+    "schema_relaxed": false,
+    "schema_allow_additional_properties": true,
+    "entity_align": true,
+    "entity_fuzzy": true,
+    "entity_fuzzy_threshold": 88.0,
+    "llm_model": "gpt-4o-mini",
+    "embedding_model": "text-embedding-3-small",
+    "llm_temperature": 0.0,
+    "neo4j_database": null
+}

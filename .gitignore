@@ -1,0 +1,21 @@
+# Secrets (never push)
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+.Python
+.venv/
+venv/
+logs/
+data/
+# Large PropertyGraph JSON exports
+data/graph_snapshots/*.json
+# Legacy location (if any JSON remains beside demo .md)
+data/kg_snapshots/*.json
+*.egg-info/
+dist/
+build/
+# Local CLI build overrides (copy from config/build_neo4j_kg.example.json)
+config/build_neo4j_kg.json

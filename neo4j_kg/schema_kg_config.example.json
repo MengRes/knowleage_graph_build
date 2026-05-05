@@ -1,0 +1,53 @@
+{
+    "comment": "Use with: python build_neo4j_kg.py --kg-extractor schema --schema-config neo4j_kg/schema_kg_config.example.json",
+    "entities": [
+        "STANDARD",
+        "CLAUSE",
+        "REQUIREMENT",
+        "TERM",
+        "ORGANIZATION",
+        "PRODUCT",
+        "MISCELLANEOUS"
+    ],
+    "relations": [
+        "DEFINES",
+        "REQUIRES",
+        "REFERENCES",
+        "APPLIES_TO",
+        "PART_OF",
+        "IS_A",
+        "HAS_ALIAS"
+    ],
+    "validation_triples": [
+        [
+            "CLAUSE",
+            "PART_OF",
+            "STANDARD"
+        ],
+        [
+            "REQUIREMENT",
+            "REQUIRES",
+            "CLAUSE"
+        ],
+        [
+            "TERM",
+            "DEFINES",
+            "REQUIREMENT"
+        ],
+        [
+            "CLAUSE",
+            "REFERENCES",
+            "STANDARD"
+        ],
+        [
+            "ORGANIZATION",
+            "APPLIES_TO",
+            "STANDARD"
+        ],
+        [
+            "PRODUCT",
+            "APPLIES_TO",
+            "REQUIREMENT"
+        ]
+    ]
+}
